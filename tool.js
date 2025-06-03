@@ -27,63 +27,47 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function transformXmlForSlashes(xmlString) {
-  const parser = new DOMParser();
-  const xmlDoc = parser.parseFromString(xmlString, "application/xml");
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, "application/xml");
 
-  const parts = xmlDoc.getElementsByTagName("part");
+    const parts = xmlDoc.getElementsByTagName("part");
 
-  for (const part of parts) {
-    const measures = part.getElementsByTagName("measure");
-    let insideSlash = false;
+    for (const part of parts) {
+      const measures = part.getElementsByTagName("measure");
+      let insideSlash = false;
 
-    for (const measure of measures) {
-      // ✅ Check for slash in <measure-style> instead of <direction>
-      const styles = measure.getElementsByTagName("measure-style");
-      for (const style of styles) {
-        const slash = style.getElementsByTagName("slash")[0];
-        if (slash) {
-          const type = slash.getAttribute("type");
-          if (type === "start") insideSlash = true;
-          if (type === "stop") insideSlash = false;
-        }
-      }
-
-      if (insideSlash) {
-        const noteList = Array.from(measure.getElementsByTagName("note"));
-        for (const note of noteList) {
-          const pitch = note.getElementsByTagName("pitch")[0];
-          const unpitched = note.getElementsByTagName("unpitched")[0];
-
-          if (pitch || unpitched) {
-            const newNote = xmlDoc.createElement("note");
-
-            const rest = xmlDoc.createElement("rest");
-            newNote.appendChild(rest);
-
-            const duration = note.getElementsByTagName("duration")[0];
-            const voice = note.getElementsByTagName("voice")[0];
-            const type = note.getElementsByTagName("type")[0];
-
-            if (duration) newNote.appendChild(duration.cloneNode(true));
-            if (voice) newNote.appendChild(voice.cloneNode(true));
-            if (type) newNote.appendChild(type.cloneNode(true));
-
-            const notehead = xmlDoc.createElement("notehead");
-            notehead.textContent = "slash";
-            newNote.appendChild(notehead);
-
-            note.parentNode.replaceChild(newNote, note);
+      for (const measure of measures) {
+        // ✅ Check <direction> for slash start/stop
+        const directions = measure.getElementsByTagName("direction");
+        for (const dir of directions) {
+          const slash = dir.getElementsByTagName("slash")[0];
+          if (slash) {
+            const type = slash.getAttribute("type");
+            if (type === "start") insideSlash = true;
+            if (type === "stop") insideSlash = false;
           }
         }
-      }
-    }
-  }
 
-  const serializer = new XMLSerializer();
-  return serializer.serializeToString(xmlDoc);
-}
+        // ✅ Check <measure-style> for slash start/stop
+        const styles = measure.getElementsByTagName("measure-style");
+        for (const style of styles) {
+          const slash = style.getElementsByTagName("slash")[0];
+          if (slash) {
+            const type = slash.getAttribute("type");
+            if (type === "start") insideSlash = true;
+            if (type === "stop") insideSlash = false;
+          }
+        }
 
-              // Build replacement slash-style note
+        // ✅ If currently inside a slash region, modify the notes
+        if (insideSlash) {
+          const noteList = Array.from(measure.getElementsByTagName("note"));
+
+          for (const note of noteList) {
+            const pitch = note.getElementsByTagName("pitch")[0];
+            const unpitched = note.getElementsByTagName("unpitched")[0];
+
+            if (pitch || unpitched) {
               const newNote = xmlDoc.createElement("note");
 
               const rest = xmlDoc.createElement("rest");
@@ -101,7 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
               notehead.textContent = "slash";
               newNote.appendChild(notehead);
 
-              // Replace original note in-place
               note.parentNode.replaceChild(newNote, note);
             }
           }
