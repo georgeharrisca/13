@@ -37,7 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
       let insideSlash = false;
 
       for (const measure of measures) {
-        // Check for <slash type="start">
         const directions = measure.getElementsByTagName("direction");
         for (const dir of directions) {
           const slash = dir.getElementsByTagName("slash")[0];
@@ -49,29 +48,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (insideSlash) {
-          const notes = measure.getElementsByTagName("note");
-          for (const note of notes) {
+          const noteList = Array.from(measure.getElementsByTagName("note"));
+
+          for (const note of noteList) {
             const pitch = note.getElementsByTagName("pitch")[0];
             if (pitch) {
-              // Remove <pitch>
-              note.removeChild(pitch);
-              // Add <rest/> as first child
+              // Build replacement slash-style note
+              const newNote = xmlDoc.createElement("note");
+
               const rest = xmlDoc.createElement("rest");
-              note.insertBefore(rest, note.firstChild);
-              // Add <notehead>slash</notehead>
+              newNote.appendChild(rest);
+
+              const duration = note.getElementsByTagName("duration")[0];
+              const voice = note.getElementsByTagName("voice")[0];
+              const type = note.getElementsByTagName("type")[0];
+
+              if (duration) newNote.appendChild(duration.cloneNode(true));
+              if (voice) newNote.appendChild(voice.cloneNode(true));
+              if (type) newNote.appendChild(type.cloneNode(true));
+
               const notehead = xmlDoc.createElement("notehead");
               notehead.textContent = "slash";
-              note.appendChild(notehead);
-            }
-          }
-        }
+              newNote.appendChild(notehead);
 
-        // Stop slash mode at </part> (handled by loop) or <slash type="stop">
-        const directionsEnd = measure.getElementsByTagName("direction");
-        for (const dir of directionsEnd) {
-          const slash = dir.getElementsByTagName("slash")[0];
-          if (slash && slash.getAttribute("type") === "stop") {
-            insideSlash = false;
+              // Replace original note in-place
+              note.parentNode.replaceChild(newNote, note);
+            }
           }
         }
       }
