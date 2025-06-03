@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
       let insideSlash = false;
 
       for (const measure of measures) {
-        // ✅ Check <direction> for slash start/stop
+        // ✅ Check <direction> for slash markers
         const directions = measure.getElementsByTagName("direction");
         for (const dir of directions) {
           const slash = dir.getElementsByTagName("slash")[0];
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
 
-        // ✅ Check <measure-style> for slash start/stop
+        // ✅ Check <measure-style> for slash markers
         const styles = measure.getElementsByTagName("measure-style");
         for (const style of styles) {
           const slash = style.getElementsByTagName("slash")[0];
@@ -59,10 +59,8 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
 
-        // ✅ If currently inside a slash region, modify the notes
         if (insideSlash) {
           const noteList = Array.from(measure.getElementsByTagName("note"));
-
           for (const note of noteList) {
             const pitch = note.getElementsByTagName("pitch")[0];
             const unpitched = note.getElementsByTagName("unpitched")[0];
@@ -70,9 +68,17 @@ document.addEventListener("DOMContentLoaded", () => {
             if (pitch || unpitched) {
               const newNote = xmlDoc.createElement("note");
 
-              const rest = xmlDoc.createElement("rest");
-              newNote.appendChild(rest);
+              // Fake pitch for slash display
+              const fakePitch = xmlDoc.createElement("pitch");
+              const step = xmlDoc.createElement("step");
+              step.textContent = "C";
+              const octave = xmlDoc.createElement("octave");
+              octave.textContent = "4";
+              fakePitch.appendChild(step);
+              fakePitch.appendChild(octave);
+              newNote.appendChild(fakePitch);
 
+              // Preserve duration, voice, type
               const duration = note.getElementsByTagName("duration")[0];
               const voice = note.getElementsByTagName("voice")[0];
               const type = note.getElementsByTagName("type")[0];
@@ -81,10 +87,12 @@ document.addEventListener("DOMContentLoaded", () => {
               if (voice) newNote.appendChild(voice.cloneNode(true));
               if (type) newNote.appendChild(type.cloneNode(true));
 
+              // Add slash notehead
               const notehead = xmlDoc.createElement("notehead");
               notehead.textContent = "slash";
               newNote.appendChild(notehead);
 
+              // Replace original note
               note.parentNode.replaceChild(newNote, note);
             }
           }
