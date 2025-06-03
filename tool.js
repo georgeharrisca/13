@@ -35,10 +35,10 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const part of parts) {
       const measures = part.getElementsByTagName("measure");
       let insideSlash = false;
-      let currentClef = "treble"; // default fallback
+      let currentClef = "treble"; // Default
 
       for (const measure of measures) {
-        // Check for clef change
+        // Check for clef changes
         const attributes = measure.getElementsByTagName("attributes");
         for (const attr of attributes) {
           const clef = attr.getElementsByTagName("clef")[0];
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
 
-        // Slash detection from <direction>
+        // Check for <slash> in <direction>
         const directions = measure.getElementsByTagName("direction");
         for (const dir of directions) {
           const slash = dir.getElementsByTagName("slash")[0];
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
 
-        // Slash detection from <measure-style>
+        // Check for <slash> in <measure-style>
         const styles = measure.getElementsByTagName("measure-style");
         for (const style of styles) {
           const slash = style.getElementsByTagName("slash")[0];
@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
 
+        // If inside slash region, convert notes
         if (insideSlash) {
           const noteList = Array.from(measure.getElementsByTagName("note"));
           for (const note of noteList) {
@@ -79,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (pitch || unpitched) {
               const newNote = xmlDoc.createElement("note");
 
-              // Choose pitch based on clef
+              // Set slash pitch based on clef
               const fakePitch = xmlDoc.createElement("pitch");
               const step = xmlDoc.createElement("step");
               const octave = xmlDoc.createElement("octave");
@@ -87,21 +88,22 @@ document.addEventListener("DOMContentLoaded", () => {
               switch (currentClef) {
                 case "percussion":
                   step.textContent = "C";
-                  octave.textContent = "5"; // visually centered on single-line staff
+                  octave.textContent = "5";
                   break;
                 case "bass":
-                  step.textContent = "B";
+                  step.textContent = "D";
                   octave.textContent = "2";
                   break;
-                default:
+                default: // treble and unknown
                   step.textContent = "B";
-                  octave.textContent = "4"; // default for treble
+                  octave.textContent = "4";
               }
 
               fakePitch.appendChild(step);
               fakePitch.appendChild(octave);
               newNote.appendChild(fakePitch);
 
+              // Preserve duration, voice, type
               const duration = note.getElementsByTagName("duration")[0];
               const voice = note.getElementsByTagName("voice")[0];
               const type = note.getElementsByTagName("type")[0];
@@ -110,6 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
               if (voice) newNote.appendChild(voice.cloneNode(true));
               if (type) newNote.appendChild(type.cloneNode(true));
 
+              // Add <notehead>slash</notehead>
               const notehead = xmlDoc.createElement("notehead");
               notehead.textContent = "slash";
               newNote.appendChild(notehead);
