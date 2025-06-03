@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
               if (currentClef === "percussion") {
                 const unpitchedElem = xmlDoc.createElement("unpitched");
                 const displayStep = xmlDoc.createElement("display-step");
-                displayStep.textContent = "D"; // ← centered
+                displayStep.textContent = "E"; // ← centered
                 const displayOctave = xmlDoc.createElement("display-octave");
                 displayOctave.textContent = "4";
                 unpitchedElem.appendChild(displayStep);
