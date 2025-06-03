@@ -6,16 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // ✅ Replace with raw GitHub URLs to your XML files
   const xmlFiles = [
     {
-      name: "Violin",
-      file: "https://raw.githubusercontent.com/georgeharrisca/auto-arranger/main/parts/violin.xml"
-    },
-    {
-      name: "Viola",
-      file: "https://raw.githubusercontent.com/georgeharrisca/auto-arranger/main/parts/viola.xml"
-    },
-    {
-      name: "Cello",
-      file: "https://raw.githubusercontent.com/georgeharrisca/auto-arranger/main/parts/cello.xml"
+      name: "tbm",
+      file: "https://raw.githubusercontent.com/georgeharrisca/13/main/tbm.xml"
     },
   ];
 
