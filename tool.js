@@ -86,10 +86,19 @@ document.addEventListener("DOMContentLoaded", () => {
               const octave = xmlDoc.createElement("octave");
 
               switch (currentClef) {
-                case "percussion":
-                  step.textContent = "C";
-                  octave.textContent = "5";
-                  break;
+             case "percussion":
+  step.textContent = "C";
+  octave.textContent = "5";
+
+  // Optional: add display-step/octave for centered rendering
+  const displayStep = xmlDoc.createElement("display-step");
+  displayStep.textContent = "B";
+  const displayOctave = xmlDoc.createElement("display-octave");
+  displayOctave.textContent = "4";
+  fakePitch.appendChild(displayStep);
+  fakePitch.appendChild(displayOctave);
+  break;
+
                 case "bass":
                   step.textContent = "D";
                   octave.textContent = "2";
