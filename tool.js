@@ -35,9 +35,20 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const part of parts) {
       const measures = part.getElementsByTagName("measure");
       let insideSlash = false;
+      let currentClef = "treble"; // default fallback
 
       for (const measure of measures) {
-        // ✅ Check <direction> for slash markers
+        // Check for clef change
+        const attributes = measure.getElementsByTagName("attributes");
+        for (const attr of attributes) {
+          const clef = attr.getElementsByTagName("clef")[0];
+          if (clef) {
+            const sign = clef.getElementsByTagName("sign")[0]?.textContent?.toLowerCase();
+            if (sign) currentClef = sign;
+          }
+        }
+
+        // Slash detection from <direction>
         const directions = measure.getElementsByTagName("direction");
         for (const dir of directions) {
           const slash = dir.getElementsByTagName("slash")[0];
@@ -48,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
 
-        // ✅ Check <measure-style> for slash markers
+        // Slash detection from <measure-style>
         const styles = measure.getElementsByTagName("measure-style");
         for (const style of styles) {
           const slash = style.getElementsByTagName("slash")[0];
@@ -68,17 +79,29 @@ document.addEventListener("DOMContentLoaded", () => {
             if (pitch || unpitched) {
               const newNote = xmlDoc.createElement("note");
 
-              // Fake pitch for slash display
+              // Choose pitch based on clef
               const fakePitch = xmlDoc.createElement("pitch");
-             const step = xmlDoc.createElement("step");
-step.textContent = "B";
-const octave = xmlDoc.createElement("octave");
-octave.textContent = "5";
+              const step = xmlDoc.createElement("step");
+              const octave = xmlDoc.createElement("octave");
+
+              switch (currentClef) {
+                case "percussion":
+                  step.textContent = "C";
+                  octave.textContent = "5"; // visually centered on single-line staff
+                  break;
+                case "bass":
+                  step.textContent = "B";
+                  octave.textContent = "2";
+                  break;
+                default:
+                  step.textContent = "B";
+                  octave.textContent = "4"; // default for treble
+              }
+
               fakePitch.appendChild(step);
               fakePitch.appendChild(octave);
               newNote.appendChild(fakePitch);
 
-              // Preserve duration, voice, type
               const duration = note.getElementsByTagName("duration")[0];
               const voice = note.getElementsByTagName("voice")[0];
               const type = note.getElementsByTagName("type")[0];
@@ -87,12 +110,10 @@ octave.textContent = "5";
               if (voice) newNote.appendChild(voice.cloneNode(true));
               if (type) newNote.appendChild(type.cloneNode(true));
 
-              // Add slash notehead
               const notehead = xmlDoc.createElement("notehead");
               notehead.textContent = "slash";
               newNote.appendChild(notehead);
 
-              // Replace original note
               note.parentNode.replaceChild(newNote, note);
             }
           }
