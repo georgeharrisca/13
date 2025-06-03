@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch(selectedFile);
       const xmlText = await response.text();
 
-      // ✅ Parse XML and transform slash regions
       const processedXml = transformXmlForSlashes(xmlText);
 
       await osmd.load(processedXml);
@@ -31,36 +30,48 @@ document.addEventListener("DOMContentLoaded", () => {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlString, "application/xml");
 
-    const slashStarts = [];
-    const measures = xmlDoc.getElementsByTagName("measure");
+    const parts = xmlDoc.getElementsByTagName("part");
 
-    let insideSlash = false;
+    for (const part of parts) {
+      const measures = part.getElementsByTagName("measure");
+      let insideSlash = false;
 
-    for (const measure of measures) {
-      const directions = measure.getElementsByTagName("direction");
-      for (const dir of directions) {
-        const slash = dir.getElementsByTagName("slash")[0];
-        if (slash) {
-          const type = slash.getAttribute("type");
-          if (type === "start") insideSlash = true;
-          if (type === "stop") insideSlash = false;
+      for (const measure of measures) {
+        // Check for <slash type="start">
+        const directions = measure.getElementsByTagName("direction");
+        for (const dir of directions) {
+          const slash = dir.getElementsByTagName("slash")[0];
+          if (slash) {
+            const type = slash.getAttribute("type");
+            if (type === "start") insideSlash = true;
+            if (type === "stop") insideSlash = false;
+          }
         }
-      }
 
-      if (insideSlash) {
-        const notes = measure.getElementsByTagName("note");
-        for (const note of notes) {
-          const pitch = note.getElementsByTagName("pitch")[0];
-          if (pitch) {
-            // Remove pitch
-            note.removeChild(pitch);
-            // Add <rest/>
-            const rest = xmlDoc.createElement("rest");
-            note.insertBefore(rest, note.firstChild);
-            // Add <notehead>slash</notehead>
-            const notehead = xmlDoc.createElement("notehead");
-            notehead.textContent = "slash";
-            note.appendChild(notehead);
+        if (insideSlash) {
+          const notes = measure.getElementsByTagName("note");
+          for (const note of notes) {
+            const pitch = note.getElementsByTagName("pitch")[0];
+            if (pitch) {
+              // Remove <pitch>
+              note.removeChild(pitch);
+              // Add <rest/> as first child
+              const rest = xmlDoc.createElement("rest");
+              note.insertBefore(rest, note.firstChild);
+              // Add <notehead>slash</notehead>
+              const notehead = xmlDoc.createElement("notehead");
+              notehead.textContent = "slash";
+              note.appendChild(notehead);
+            }
+          }
+        }
+
+        // Stop slash mode at </part> (handled by loop) or <slash type="stop">
+        const directionsEnd = measure.getElementsByTagName("direction");
+        for (const dir of directionsEnd) {
+          const slash = dir.getElementsByTagName("slash")[0];
+          if (slash && slash.getAttribute("type") === "stop") {
+            insideSlash = false;
           }
         }
       }
