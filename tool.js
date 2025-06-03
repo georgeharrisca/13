@@ -1,14 +1,48 @@
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   const osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay("osmd-container");
+  const fileSelect = document.getElementById("fileSelect");
+  const loadButton = document.getElementById("loadButton");
 
-  try {
-    const response = await fetch("test.musicxml");
-    const xml = await response.text();
-    await osmd.load(xml);
-    osmd.render();
-  } catch (error) {
-    console.error("Error loading MusicXML:", error);
-    document.getElementById("osmd-container").innerText = "Failed to load MusicXML file.";
-  }
+  // ✅ Replace with raw GitHub URLs to your XML files
+  const xmlFiles = [
+    {
+      name: "Violin",
+      file: "https://raw.githubusercontent.com/georgeharrisca/auto-arranger/main/parts/violin.xml"
+    },
+    {
+      name: "Viola",
+      file: "https://raw.githubusercontent.com/georgeharrisca/auto-arranger/main/parts/viola.xml"
+    },
+    {
+      name: "Cello",
+      file: "https://raw.githubusercontent.com/georgeharrisca/auto-arranger/main/parts/cello.xml"
+    },
+  ];
+
+  // Populate the dropdown
+  xmlFiles.forEach(({ name, file }) => {
+    const option = document.createElement("option");
+    option.value = file;
+    option.textContent = name;
+    fileSelect.appendChild(option);
+  });
+
+  // Load and render the selected XML
+  loadButton.addEventListener("click", async () => {
+    const selectedFile = fileSelect.value;
+    if (!selectedFile) {
+      alert("Please select a file.");
+      return;
+    }
+
+    try {
+      const response = await fetch(selectedFile);
+      const xml = await response.text();
+      await osmd.load(xml);
+      osmd.render();
+    } catch (error) {
+      console.error("Error loading XML:", error);
+      document.getElementById("osmd-container").innerText = "Failed to load XML file.";
+    }
+  });
 });
-
