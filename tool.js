@@ -13,12 +13,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(selectedFile);
-      let xml = await response.text();
+      const xmlText = await response.text();
 
-      // ✅ Pre-process the XML for slash sections
-      xml = convertSlashNotes(xml);
+      // ✅ Parse XML and transform slash regions
+      const processedXml = transformXmlForSlashes(xmlText);
 
-      await osmd.load(xml);
+      await osmd.load(processedXml);
       osmd.render();
     } catch (error) {
       console.error("Error loading or rendering the XML file:", error);
@@ -27,57 +27,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  function convertSlashNotes(xml) {
+  function transformXmlForSlashes(xmlString) {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, "application/xml");
+
+    const slashStarts = [];
+    const measures = xmlDoc.getElementsByTagName("measure");
+
     let insideSlash = false;
 
-    // Split into lines so we can scan through
-    const lines = xml.split("\n");
-    const updatedLines = [];
-
-    for (let line of lines) {
-      const trimmed = line.trim();
-
-      if (trimmed.includes("<slash") && trimmed.includes('type="start"')) {
-        insideSlash = true;
-        updatedLines.push(line);
-        continue;
+    for (const measure of measures) {
+      const directions = measure.getElementsByTagName("direction");
+      for (const dir of directions) {
+        const slash = dir.getElementsByTagName("slash")[0];
+        if (slash) {
+          const type = slash.getAttribute("type");
+          if (type === "start") insideSlash = true;
+          if (type === "stop") insideSlash = false;
+        }
       }
 
-      if (trimmed.includes("<slash") && trimmed.includes('type="stop"')) {
-        insideSlash = false;
-        updatedLines.push(line);
-        continue;
-      }
-
-      if (insideSlash && trimmed.startsWith("<note>")) {
-        // Start collecting the note block
-        let noteBlock = [line];
-        let isPitchNote = false;
-
-        while (!line.trim().includes("</note>")) {
-          line = lines.shift();
-          if (line.includes("<pitch>")) isPitchNote = true;
-          noteBlock.push(line);
+      if (insideSlash) {
+        const notes = measure.getElementsByTagName("note");
+        for (const note of notes) {
+          const pitch = note.getElementsByTagName("pitch")[0];
+          if (pitch) {
+            // Remove pitch
+            note.removeChild(pitch);
+            // Add <rest/>
+            const rest = xmlDoc.createElement("rest");
+            note.insertBefore(rest, note.firstChild);
+            // Add <notehead>slash</notehead>
+            const notehead = xmlDoc.createElement("notehead");
+            notehead.textContent = "slash";
+            note.appendChild(notehead);
+          }
         }
-
-        if (isPitchNote) {
-          // Replace with slash-style note
-          updatedLines.push("      <note>");
-          updatedLines.push("        <rest/>");
-          updatedLines.push("        <duration>1</duration>");
-          updatedLines.push("        <voice>1</voice>");
-          updatedLines.push("        <type>quarter</type>");
-          updatedLines.push("        <notehead>slash</notehead>");
-          updatedLines.push("      </note>");
-        } else {
-          // Keep original if no pitch
-          updatedLines.push(...noteBlock);
-        }
-      } else {
-        updatedLines.push(line);
       }
     }
 
-    return updatedLines.join("\n");
+    const serializer = new XMLSerializer();
+    return serializer.serializeToString(xmlDoc);
   }
 });
