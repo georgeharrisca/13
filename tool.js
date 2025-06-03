@@ -70,10 +70,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
               // Fake pitch for slash display
               const fakePitch = xmlDoc.createElement("pitch");
-              const step = xmlDoc.createElement("step");
-              step.textContent = "C";
-              const octave = xmlDoc.createElement("octave");
-              octave.textContent = "4";
+             const step = xmlDoc.createElement("step");
+step.textContent = "B";
+const octave = xmlDoc.createElement("octave");
+octave.textContent = "5";
               fakePitch.appendChild(step);
               fakePitch.appendChild(octave);
               newNote.appendChild(fakePitch);
