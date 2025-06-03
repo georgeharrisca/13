@@ -3,30 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sheet Music Viewer</title>
+  <title>XML Sheet Music Visualizer</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
+      padding: 30px;
+      max-width: 800px;
+      margin: auto;
       text-align: center;
     }
-    #osmd-container {
-      border: 1px solid #ccc;
-      margin-top: 20px;
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+
+    select, button {
       padding: 10px;
+      font-size: 1em;
+      margin: 10px;
+    }
+
+    #osmd-container {
+      margin-top: 30px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      min-height: 200px;
     }
   </style>
 </head>
 <body>
-  <h1>Sheet Music Visualizer</h1>
-  <p>This tool renders MusicXML files using OpenSheetMusicDisplay.</p>
+
+  <h1>XML Sheet Music Visualizer</h1>
+
+  <label for="fileSelect">Select a part file:</label><br/>
+  <select id="fileSelect">
+    <option value="">-- Select an XML file --</option>
+    <option value="https://raw.githubusercontent.com/georgeharrisca/13/main/tbm.xml">tbm</option>
+  </select>
+  <br/>
+  <button id="loadButton">Visualize</button>
+
   <div id="osmd-container"></div>
 
   <!-- Load OSMD from your local lib folder -->
   <script src="lib/opensheetmusicdisplay.min.js"></script>
-
-  <!-- Optional external logic -->
   <script src="tool.js"></script>
 </body>
 </html>
-
