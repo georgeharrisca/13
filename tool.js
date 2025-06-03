@@ -1,40 +1,37 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Initialize OSMD (OpenSheetMusicDisplay)
   const osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay("osmd-container");
+
+  // Get references to the dropdown and button
   const fileSelect = document.getElementById("fileSelect");
   const loadButton = document.getElementById("loadButton");
 
-  // ✅ Replace with raw GitHub URLs to your XML files
-  const xmlFiles = [
-    {
-      name: "tbm",
-      file: "https://raw.githubusercontent.com/georgeharrisca/13/main/tbm.xml"
-    },
-  ];
-
-  // Populate the dropdown
-  xmlFiles.forEach(({ name, file }) => {
-    const option = document.createElement("option");
-    option.value = file;
-    option.textContent = name;
-    fileSelect.appendChild(option);
-  });
-
-  // Load and render the selected XML
+  // Add click event to the "Visualize" button
   loadButton.addEventListener("click", async () => {
     const selectedFile = fileSelect.value;
+
     if (!selectedFile) {
-      alert("Please select a file.");
+      alert("Please select an XML file to visualize.");
       return;
     }
 
     try {
+      // Fetch the raw XML file from GitHub
       const response = await fetch(selectedFile);
-      const xml = await response.text();
-      await osmd.load(xml);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const xmlText = await response.text();
+
+      // Load and render the sheet music
+      await osmd.load(xmlText);
       osmd.render();
     } catch (error) {
-      console.error("Error loading XML:", error);
-      document.getElementById("osmd-container").innerText = "Failed to load XML file.";
+      console.error("Error loading or rendering the XML file:", error);
+      document.getElementById("osmd-container").innerText =
+        "Failed to load or render the selected XML file.";
     }
   });
 });
