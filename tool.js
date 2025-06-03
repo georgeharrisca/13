@@ -82,14 +82,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
               // For percussion clef: use <unpitched> + display-step/octave
               if (currentClef === "percussion") {
-                const unpitched = xmlDoc.createElement("unpitched");
+                const unpitchedElem = xmlDoc.createElement("unpitched");
                 const displayStep = xmlDoc.createElement("display-step");
-                displayStep.textContent = "C";
+                displayStep.textContent = "D"; // ← centered
                 const displayOctave = xmlDoc.createElement("display-octave");
                 displayOctave.textContent = "4";
-                unpitched.appendChild(displayStep);
-                unpitched.appendChild(displayOctave);
-                newNote.appendChild(unpitched);
+                unpitchedElem.appendChild(displayStep);
+                unpitchedElem.appendChild(displayOctave);
+                newNote.appendChild(unpitchedElem);
               } else {
                 // For treble/bass clefs: use <pitch>
                 const fakePitch = xmlDoc.createElement("pitch");
